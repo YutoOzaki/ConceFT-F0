@@ -45,8 +45,9 @@ offset = ceil(L_integer/2);
 
 oct = log2(frange(end)/frange(1));
 F = frange(1).*2.^((0:(oct*voice))'./voice);
+q = 8;
 
-for k=1:size(segment, 1)
+for k=61:size(segment, 1)
     % ConceFT
     z = s(segment(k, 1) - offset:segment(k, 2) + offset);
     [W, T, E_Omg] = h_conceFT(z', be, gam, frange, voice, fs, J, N);
@@ -55,9 +56,9 @@ for k=1:size(segment, 1)
     E_Omg = E_Omg(:, 1 + offset:end - offset);
     
     % De-shape
-    U = h_gausscorr(abs(T).^2, voice);
+    U = h_gausscorr(abs(T), voice);
     U = U./max(abs(U(:)));
-    D = abs(T).*2.*exp(5.*U);
+    D = abs(T).*2.*exp(q.*U);
     
     % Viterbi
     V = D;
