@@ -1,4 +1,4 @@
-function test05_sst
+function test07_sst2
     rng(22);
 
     %%
@@ -43,17 +43,47 @@ function test05_sst
     for i=1:numel(s)
         H = 0;
         dH = 0;
+        ddH = 0;
+        kH = 0;
+        dkH = 0;
+
         f_s = s(i).*f;
 
-        for k=0:K
-            [H_k, dH_k] = morsewavelet(gam, be, k, f_s);
+        k = 0;
+        [H_k, dH_k, ddH_k] = morsewavelet(gam, be, k, f_s);
+        H = H + r(k + 1).*H_k;
+        dH = dH + r(k + 1).*dH_k;
+        ddH = ddH + r(k + 1).*ddH_k;
+        [kH_k, dkH_k, ddkH_k] = morsewavelet(gam, be, k + 1, f_s);
+        kH = kH + r(k + 1).*kH_k;
+        dkH = dkH + r(k + 1).*dkH_k;
+        
+        for k=1:K
+            H_k = kH_k;
+            dH_k = dkH_k;
+            ddH_k = ddkH_k;
+
             H = H + r(k + 1).*H_k;
             dH = dH + r(k + 1).*dH_k;
+            ddH = ddH + r(k + 1).*ddH_k;
+
+            [kH_k, dkH_k, ddkH_k] = morsewavelet(gam, be, k + 1, f_s);
+            kH = kH + r(k + 1).*kH_k;
+            dkH = dkH + r(k + 1).*dkH_k;
         end
 
         W(i, :) = ifft(X.*H);
         dW = ifft(X.*dH);
-        Omg(i, :) = dW./W(i, :)./s(i);
+        Omg_1 = dW./W(i, :)./s(i);
+
+        kW = ifft(X.*kH);
+        tau = t + s(i)/(2*1i*pi).*(kW./W(i, :));
+
+        ddW = ifft(X.*ddH);
+        dkW = ifft(X.*dkH);
+        q = (2*1i*pi/s(i)^2) .* (ddW.*W(i, :) - dW.^2)./(W(i, :) + dkW.*W(i, :) - kW.*dW);
+
+        Omg(i, :) = Omg_1 + q.*(t - tau);
     end
     W = W.*sqrt(s);
     

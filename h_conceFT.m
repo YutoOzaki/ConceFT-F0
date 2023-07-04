@@ -67,7 +67,7 @@ function [W_x, T, E_Omg] = h_conceFT(x, be, gam, frange, voice, fs, J, N)
         end
         
         %% IF estimation
-        Omg = -1i.*dW./(2*pi.*W);
+        Omg = dW./W;
         Omg = Omg(:, numel(ZEROPAD) + 1:end - numel(ZEROPAD));
         Omg = fs.*real(Omg);
 

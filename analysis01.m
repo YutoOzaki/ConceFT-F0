@@ -47,7 +47,7 @@ oct = log2(frange(end)/frange(1));
 F = frange(1).*2.^((0:(oct*voice))'./voice);
 q = 8;
 
-for k=61:size(segment, 1)
+for k=75:size(segment, 1)
     % ConceFT
     z = s(segment(k, 1) - offset:segment(k, 2) + offset);
     [W, T, E_Omg] = h_conceFT(z', be, gam, frange, voice, fs, J, N);

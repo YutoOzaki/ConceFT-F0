@@ -1,4 +1,4 @@
-function [H, dH] = morsewavelet(gam, be, k, f)
+function [H, dH, ddH] = morsewavelet(gam, be, k, f)
     %% Reference
     % [1] Olhede, S., C & Walden, A., T. (2002). Generalized Morse Wavelets.
     % IEEE Transactions on Signal Processing, 50(11), 2661-2670.
@@ -24,5 +24,6 @@ function [H, dH] = morsewavelet(gam, be, k, f)
     H = sqrt(2)*A*(2*pi*f).^be.*exp(-(2*pi.*f).^gam).*L;
 
     %% Derivative for instantenous frequency estimation
-    dH = 1i.*H.*(2*pi.*f);
+    dH = H.*f;
+    ddH = dH.*f;
 end
