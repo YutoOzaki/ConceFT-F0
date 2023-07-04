@@ -1,5 +1,5 @@
 function test07_sst2
-    rng(22);
+    %rng(22);
 
     %%
     fs = 2000;
@@ -14,12 +14,22 @@ function test07_sst2
     end
     %}
     
+    %%{
     f0 = fs*0.3*rand + 0.05*fs;
-    x = chirp(t, f0, t(end), fs*0.45);
+    x = chirp(t, f0, t(end), fs*0.45, 'quadratic');
+    %}
+
+    %{
+    f0 = [];
+    A = 1 + 3.*t.^2 + 4.*(1 - t).^7;
+    ph = 240.*t - 2.*exp(-2.*t).*sin(14*pi.*t);
+    x = A.*exp(2*pi*1i.*ph);
+    x = real(x);
+    %}
 
     %%
-    %K = randi(5) - 1;
-    K = 0;
+    K = randi(5) - 1;
+    %K = 0;
     be = 20 + rand*10;
     gam = 2 + rand*9;
     f = linspace(0, 1, numel(x));
@@ -81,7 +91,7 @@ function test07_sst2
 
         ddW = ifft(X.*ddH);
         dkW = ifft(X.*dkH);
-        q = (2*1i*pi/s(i)^2) .* (ddW.*W(i, :) - dW.^2)./(W(i, :) + dkW.*W(i, :) - kW.*dW);
+        q = (2*1i*pi/s(i)^2) .* (ddW.*W(i, :) - dW.^2)./(dkW.*W(i, :) - kW.*dW); %W(i, :) + 
 
         Omg(i, :) = Omg_1 + q.*(t - tau);
     end

@@ -15,7 +15,7 @@ function test05_sst
     %}
     
     f0 = fs*0.3*rand + 0.05*fs;
-    x = chirp(t, f0, t(end), fs*0.45);
+    x = chirp(t, f0, t(end), fs*0.45, 'quadratic');
 
     %%
     %K = randi(5) - 1;
