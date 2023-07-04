@@ -5,7 +5,7 @@ function test05_sst
     fs = 2000;
     t = (0:(2*fs - 1))./fs;
     
-    %{
+    %%{
     a = rand(3, 1);
     f0 = sort((fs*0.3).*rand(3, 1));
     x = 0;
@@ -14,8 +14,10 @@ function test05_sst
     end
     %}
     
+    %{
     f0 = fs*0.3*rand + 0.05*fs;
     x = chirp(t, f0, t(end), fs*0.45, 'quadratic');
+    %}
 
     %%
     %K = randi(5) - 1;

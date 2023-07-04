@@ -5,7 +5,7 @@ function test07_sst2
     fs = 2000;
     t = (0:(2*fs - 1))./fs;
     
-    %{
+    %%{
     a = rand(3, 1);
     f0 = sort((fs*0.3).*rand(3, 1));
     x = 0;
@@ -14,7 +14,7 @@ function test07_sst2
     end
     %}
     
-    %%{
+    %{
     f0 = fs*0.3*rand + 0.025*fs;
     x = chirp(t, f0, t(end), fs*0.45, 'quadratic');
     %}
@@ -92,39 +92,9 @@ function test07_sst2
 
         ddW = ifft(X.*ddH);
         dkW = ifft(X.*dkH);
-
         q = (2*1i*pi/s(i)^2) .* (ddW.*W(i, :) - dW.^2)./(W(i, :).^2 + dkW.*W(i, :) - kW.*dW);
-        %{
-        A = 2*1i*pi/s(i) .* (ddW.*W(i, :) - dW.^2)./W(i, :).^2;
-        D = 1 + s(i).*(dkW.*W(i, :) - kW.*dW)./W(i, :).^2;
-        q = A./D;
-        %}
 
         Omg(i, :) = Omg_1 + q.*(t_N - tau);
-
-        %{
-        addpath('C:\Users\yuto\Documents\MATLAB\lib2\numdiff');
-
-        A = 2*1i*pi/s(i) .* (ddW.*W(i, :) - dW.^2)./W(i, :).^2;
-        B = numdiff.dif(Omg_1, 1);
-        C = B - A;
-        figure;
-        plot(real(A)); hold on; plot(imag(A)); hold off; %xlim([1000, 2000]);
-        figure;
-        plot(real(B)); hold on; plot(imag(B)); hold off; %xlim([1000, 2000]);
-        figure;
-        plot(real(C)); hold on; plot(imag(C)); hold off; %xlim([1000, 2000]);
-
-        D = 1 + s(i).*(dkW.*W(i, :) - kW.*dW)./W(i, :).^2;
-        E = numdiff.dif(tau, 1);
-        F = E - D;
-        figure;
-        plot(real(D)); hold on; plot(imag(D)); hold off; %xlim([1000, 2000]);
-        figure;
-        plot(real(E)); hold on; plot(imag(E)); hold off; %xlim([1000, 2000]);
-        figure;
-        plot(real(F)); hold on; plot(imag(F)); hold off; %xlim([1000, 2000]);
-        %}
     end
     W = W.*sqrt(s);
     
