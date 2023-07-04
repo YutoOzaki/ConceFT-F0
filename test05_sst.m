@@ -1,5 +1,5 @@
 function test05_sst
-    rng(22);
+    rng(1);
 
     %%
     fs = 2000;
@@ -125,7 +125,7 @@ function test05_sst
     hold off
     xlim([2000, 2200]);
 
-    figure(3);
+    figure(5);
     subplot(2, 2, 1);
     p = pcolor(1:size(W, 2), F, abs(W).^2);
     p.EdgeColor = 'none';
