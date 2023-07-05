@@ -69,7 +69,7 @@ function test07_sst2
         kH = kH + r(k + 1).*kH_k;
         dkH = dkH + r(k + 1).*dkH_k;
         
-        for k=1:K
+        for k=0:K
             H_k = kH_k;
             dH_k = dkH_k;
             ddH_k = ddkH_k;
