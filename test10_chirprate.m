@@ -73,12 +73,13 @@ function test10_chirprate
     
     figure(3);
     clf; cla;
-    plot(t, q(i, :));
+    plot(t, fs.*q(i, :));
     hold on;
-    plot(t, qhat(i, :));
+    plot(t, fs.*qhat(i, :));
     yl = ylim(); plot([t_s, t_s], yl, '-.m');
     hold off
-    title(sprintf('f = %3.4f, IF = %3.4f, c = %3.4f', f0 + c*t_s, fs*real(Omg(i, idx)), c/fs));
+    title(sprintf('f = %3.4f, IF = %3.4f, c = %3.4f, qhat = %3.4f, q = %3.4f',...
+        f0 + c*t_s, fs*real(Omg(i, idx)), c, fs*qhat(i, idx), fs*q(i, idx)));
 
     figure(4);
     plot(t, real(tau(i, :) - t));
