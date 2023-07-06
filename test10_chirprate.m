@@ -1,24 +1,28 @@
 function test10_chirprate
+    rng(100);
+
     %% data simulation
-    N = 512;
+    N = 1024;
     fs = 200;
     ph_0 = rand*2*pi;
     f0 = 5 + 10*rand;
     f1 = 80 + 10*rand;
     t = (0:(N - 1))./fs;
 
-    %{
+    %%{
     c = (f1 - f0)/(N/fs);
     f_x = f0 + t.*c;
     h_f = @(i) f0 + c*(i - 1)/fs;
+    h_q = @(t) c.*ones(numel(t), 1);
     x = cos(ph_0 + 2*pi.*(c/2.*t.^2 + f0.*t));
     %}
 
-    %%{
-    k = (f1/f0)^(1/(N/fs));
-    f_x = f0.*k.^t;
-    h_f = @(i) f0 + k^((i - 1)/fs);
-    x = sin(ph_0 + 2*pi*f0.*(k.^t - 1)./log(k));
+    %{
+    c = (f1/f0)^(1/(N/fs));
+    f_x = f0.*c.^t;
+    h_f = @(i) f0*c^((i - 1)/fs);
+    h_q = @(t) t.*f0.*c.^(t - 1);
+    x = sin(ph_0 + 2*pi*f0.*(c.^t - 1)./log(c));
     %}
 
     figure(1);
@@ -96,19 +100,23 @@ function test10_chirprate
     hold on
     plot(t, f_x, '-.m');
     hold off
+    title(sprintf('error = %e', mean(abs(f_x(:) - fhat(:).*fs))));
     
     figure(4);
     plot(t, gdhat.*(N/fs))
     hold on
     plot(t, t, '-.m');
     hold off
+    title(sprintf('error = %e', mean(abs(t(:) - gdhat(:).*(N/fs)))));
 
     figure(5);
-    plot(t, chat(:, 1));
+    subplot(2, 1, 1);
+    plot(t, chat(:, 1).*fs);
     hold on
-    plot(t, chat(:, 2))
+    plot(t, chat(:, 2).*fs)
     hold off
-    title(sprintf('c = %3.4f', c));
-    disp(c./chat(60, 1))
-    disp(c./chat(60, 2))
+    subplot(2, 1, 2);
+    plot(t, h_q(t), '-.m');
+    disp(fs*chat(60, 1)/N / h_q(t(60)));
+    disp(h_q(t(60)) / (fs*chat(60, 2)/N));
 end
