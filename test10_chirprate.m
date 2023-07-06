@@ -2,18 +2,30 @@ function test10_chirprate
     %% data simulation
     N = 512;
     fs = 200;
+    ph_0 = rand*2*pi;
     f0 = 5 + 10*rand;
     f1 = 80 + 10*rand;
     t = (0:(N - 1))./fs;
-    ph_0 = rand*2*pi;
-    c = (f1 - f0)/t(end);
-    x = sin(ph_0 + 2*pi.*(c/2.*t.^2 + f0.*t));
+
+    %{
+    c = (f1 - f0)/(N/fs);
+    f_x = f0 + t.*c;
+    h_f = @(i) f0 + c*(i - 1)/fs;
+    x = cos(ph_0 + 2*pi.*(c/2.*t.^2 + f0.*t));
+    %}
+
+    %%{
+    k = (f1/f0)^(1/(N/fs));
+    f_x = f0.*k.^t;
+    h_f = @(i) f0 + k^((i - 1)/fs);
+    x = sin(ph_0 + 2*pi*f0.*(k.^t - 1)./log(k));
+    %}
 
     figure(1);
     clf; cla;
     spectrogram(x, hann(32), 31, 32, fs, 'yaxis');
     colorbar off
-    hold on; plot([t(1), t(end)], [f0, f1], 'Color', 'r'); hold off;
+    hold on; plot(t, f_x, 'Color', 'r'); hold off;
 
     %% CWT and chirp rate
     gam = 9;
@@ -61,7 +73,7 @@ function test10_chirprate
     for i=1:numel(x)
         qhat(:, i) = real(numdiff.dif(Omg(:, i), 1)./numdiff.dif(tau(:, i), 1));
 
-        f_i = f0 + c*(i - 1)/fs;
+        f_i = h_f(i);
         s_i = (f_i/fs/omg_c)^-1;
         [~, idx] = min(abs(s_i - s));
 
@@ -82,7 +94,7 @@ function test10_chirprate
     figure(3);
     plot(t, fhat.*fs);
     hold on
-    plot(t, f0 + c.*t, '-.m');
+    plot(t, f_x, '-.m');
     hold off
     
     figure(4);
@@ -97,4 +109,6 @@ function test10_chirprate
     plot(t, chat(:, 2))
     hold off
     title(sprintf('c = %3.4f', c));
+    disp(c./chat(60, 1))
+    disp(c./chat(60, 2))
 end
