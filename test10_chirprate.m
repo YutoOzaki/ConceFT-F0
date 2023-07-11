@@ -3,14 +3,14 @@ function test10_chirprate
 
     %% data simulation
     N = 1024;
-    fs = 200;
+    fs = 450;
     ph_0 = rand*2*pi;
     f0 = 5 + 10*rand;
     f1 = 80 + 10*rand;
     t = (0:(N - 1))./fs;
 
     %%{
-    c = (f1 - f0)/(N/fs);
+    c = (f1 - f0)/4;
     f_x = f0 + t.*c;
     h_f = @(i) f0 + c*(i - 1)/fs;
     h_q = @(t) c.*ones(numel(t), 1);
@@ -44,7 +44,6 @@ function test10_chirprate
     dj = 1/32;
     s = s_min*2.^(0:dj:J)';
 
-    addpath('C:\Users\yuto\Documents\MATLAB\lib2\numdiff');
     X = fft(x);
     n = (0:numel(x) - 1)./numel(x);
     Omg = zeros(numel(s), numel(x));
@@ -56,11 +55,13 @@ function test10_chirprate
     gdhat = zeros(numel(x), 1);
     E = zeros(numel(s), 1);
     for i=1:numel(s)
-        [H, xiH, xisqH] = morsewavelet(gam, be, k, s(i).*f);
+        [H, xiH, xisqH, dH, xidH] = morsewavelet(gam, be, k, s(i).*f);
+        dH = dH./N;
+        xidH = xidH./N;
         E(i) = trapz(s(i).*f(1:N/2), H(1:N/2).^2);
         
-        dH = numdiff.dif(H, s(i));
-        xidH = numdiff.dif(xiH, s(i));
+        %dH = gradient(H, s(i));
+        %xidH = gradient(xiH, s(i));
 
         W_H = ifft(X.*H).*sqrt(s(i));
         W_xiH = ifft(X.*xiH).*sqrt(s(i));
@@ -75,7 +76,7 @@ function test10_chirprate
     q = real(q);
 
     for i=1:numel(x)
-        qhat(:, i) = real(numdiff.dif(Omg(:, i), 1)./numdiff.dif(tau(:, i), 1));
+        qhat(:, i) = real(gradient(Omg(:, i), 1)./gradient(tau(:, i), 1));
 
         f_i = h_f(i);
         s_i = (f_i/fs/omg_c)^-1;
@@ -117,6 +118,6 @@ function test10_chirprate
     hold off
     subplot(2, 1, 2);
     plot(t, h_q(t), '-.m');
-    disp(fs*chat(60, 1)/N / h_q(t(60)));
-    disp(h_q(t(60)) / (fs*chat(60, 2)/N));
+    
+    fprintf('%e vs. %e\n', h_q(t(60)), chat(60, 2)/sqrt(fs));
 end

@@ -1,4 +1,4 @@
-function [H, dH, ddH, gH] = morsewavelet(gam, be, k, f)
+function [H, dH, ddH, gH, gdH] = morsewavelet(gam, be, k, f)
     %% Reference
     % [1] Olhede, S., C & Walden, A., T. (2002). Generalized Morse Wavelets.
     % IEEE Transactions on Signal Processing, 50(11), 2661-2670.
@@ -20,25 +20,24 @@ function [H, dH, ddH, gH] = morsewavelet(gam, be, k, f)
     r = (2*be + 1)/gam;
     c = r - 1;
     A = sqrt(pi*gam*2^r*gamma(k + 1)/gamma(k + r));
-    x = 2.*xi.^gam;
-    m = (0:k)';
-    C_m = (-1).^m.*gamma(k + c + 1)./(gamma(c + m + 1).*gamma(k - m + 1))./factorial(m);
-    L = sum(C_m .* x.^m, 1);
-    H = sqrt(2)*A*xi.^be.*exp(-xi.^gam).*L;
+    P = xi.^be;
+    Q = exp(-xi.^gam);
+    L = laguerrepoly(2.*xi.^gam, k, c);
+    H = sqrt(2)*A*P.*Q.*L;
 
     %% Derivative for instantenous frequency estimation
     dH = H.*f;
     ddH = dH.*f;
     
     %% Differentiation
-    df = f(end)/(numel(f) - 1);
-    %gL = sum(C_m .* gam.*m.*pi.^(gam.*m).*2.^((gam + 1).*m).*(x.^gam).^m./x, 1);
-    m = (0:k - 1)';
-    c = r;
-    C_m = (-1).^m.*gamma(k + c + 1)./(gamma(c + m + 1).*gamma(k - m + 1))./factorial(m);
-    gL = -sum(C_m .* x.^m, 1) .* (gam*pi^gam*2^(gam + 1)*f.^(gam - 1));
-
-    gH = sqrt(2)*A * ((be*xi.^(be - 1)).*exp(-xi.^gam).*L + xi.^be.*(-gam.*xi.^(gam - 1).*exp(-xi.^gam)).*L + ...
-        xi.^be.*exp(-xi.^gam).*gL).*(2*pi*df);
-    gH(1) = 0;
+    dP = be*(2*pi)^be.*f.^(be - 1);
+    dQ = -gam*(2*pi)^gam.*f.^(gam - 1).*Q;
+    dL = 2*gam*(2*pi)^gam.*f.^(gam - 1).*(-laguerrepoly(2.*xi.^gam, k - 1, c + 1));
+    
+    gH = sqrt(2)*A.*(...
+        dP.*Q.*L + ...
+        P.*dQ.*L + ...
+        P.*Q.*dL);
+    
+    gdH = (gH.*f + H);
 end
