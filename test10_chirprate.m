@@ -51,11 +51,11 @@ function test10_chirprate
     s = s_min*2.^(0:dj:J)';
 
     X = fft(x);
-    n = (0:numel(x) - 1)./numel(x);
+    n = (0:numel(x) - 1);%./numel(x);
     Omg = zeros(numel(s), numel(x));
     tau = zeros(numel(s), numel(x));
     q = zeros(numel(s), numel(x));
-    qhat = zeros(numel(s), numel(x));
+    qhat = zeros(numel(s), numel(x), 2);
     fhat = zeros(numel(x), 1);
     chat = zeros(numel(x), 2);
     gdhat = zeros(numel(x), 1);
@@ -73,11 +73,12 @@ function test10_chirprate
         Omg(i, :) = (1/s(i)).*W_xiH./W_H;
         tau(i, :) = n + s(i)/(1i*2*pi).*(W_dH./W_H);
         q(i, :) = (1i*2*pi)/s(i)^2 .* (W_H.*W_xisqH - W_xiH.^2) ./ (W_H.^2 + W_H.*W_xidH + W_dH.*W_xiH);
+        qhat(i, :, 1) = real(gradient(Omg(i, :), 1)./gradient(tau(i, :), 1));
     end
     q = real(q);
 
     for i=1:numel(x)
-        qhat(:, i) = real(gradient(Omg(:, i), 1)./gradient(tau(:, i), 1));
+        qhat(:, i, 2) = real(gradient(Omg(:, i), 1)./gradient(tau(:, i), 1));
 
         f_i = h_f(i);
         s_i = (f_i/fs/omg_c)^-1;
@@ -86,7 +87,7 @@ function test10_chirprate
         fhat(i) = Omg(idx, i);
         gdhat(i) = tau(idx, i);
         chat(i, 1) = q(idx, i);
-        chat(i, 2) = qhat(idx, i);
+        chat(i, 2) = qhat(idx, i, 2);
     end
     fhat = real(fhat);
     gdhat = real(gdhat);
@@ -105,9 +106,9 @@ function test10_chirprate
     title(sprintf('error = %e', mean(abs(f_x(:) - fhat(:).*fs))));
     
     figure(4);
-    plot(t, gdhat.*(N/fs))
+    plot(t, gdhat)
     hold on
-    plot(t, t, '-.m');
+    plot(t, 1:N, '-.m');
     hold off
     title(sprintf('error = %e', mean(abs(t(:) - gdhat(:).*(N/fs)))));
 
