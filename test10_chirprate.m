@@ -57,7 +57,7 @@ function test10_chirprate
     q = zeros(numel(s), numel(x));
     qhat = zeros(numel(s), numel(x), 2);
     fhat = zeros(numel(x), 1);
-    chat = zeros(numel(x), 2);
+    chat = zeros(numel(x), 3);
     gdhat = zeros(numel(x), 1);
     E = zeros(numel(s), 1);
     for i=1:numel(s)
@@ -72,7 +72,7 @@ function test10_chirprate
 
         Omg(i, :) = (1/s(i)).*W_xiH./W_H;
         tau(i, :) = n + s(i)/(1i*2*pi).*(W_dH./W_H);
-        q(i, :) = (1i*2*pi)/s(i)^2 .* (W_H.*W_xisqH - W_xiH.^2) ./ (W_H.^2 + W_H.*W_xidH + W_dH.*W_xiH);
+        q(i, :) = (1i*2*pi)/s(i)^2 .* (W_H.*W_xisqH - W_xiH.^2) ./ (W_H.^2 + W_H.*W_xidH - W_dH.*W_xiH);
         qhat(i, :, 1) = real(gradient(Omg(i, :), 1)./gradient(tau(i, :), 1));
     end
     q = real(q);
@@ -88,6 +88,7 @@ function test10_chirprate
         gdhat(i) = tau(idx, i);
         chat(i, 1) = q(idx, i);
         chat(i, 2) = qhat(idx, i, 2);
+        chat(i, 3) = qhat(idx, i, 1);
     end
     fhat = real(fhat);
     gdhat = real(gdhat);
@@ -114,15 +115,17 @@ function test10_chirprate
 
     figure(5);
     subplot(2, 1, 1);
-    plot(t, chat(:, 1).*fs);
+    plot(t, chat(:, 1).*fs^2);
     hold on
-    plot(t, chat(:, 2).*fs^2, 'Color', "#D95319")
+    plot(t, chat(:, 2).*fs^2, 'Color', "#D95319");
+    plot(t, chat(:, 3).*fs^2, 'Color', "#EDB120", 'LineStyle', '--');
     hold off
     subplot(2, 1, 2);
     plot(t, h_q(t), '-.m');
     yl = ylim();
     hold on
-    plot(t, chat(:, 2).*fs^2, 'Color', "#D95319")
+    plot(t, chat(:, 2).*fs^2, 'Color', "#D95319");
+    plot(t, chat(:, 3).*fs^2, 'Color', "#EDB120", 'LineStyle', '--');
     hold off
     ylim(yl);
 end
