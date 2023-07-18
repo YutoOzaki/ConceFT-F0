@@ -1,16 +1,14 @@
 function test10_chirprate
-    rng(100);
-
     %% data simulation
-    N = 1024;
+    N = 1600;
     fs = 450;
     ph_0 = rand*2*pi;
     f0 = 5 + 10*rand;
-    f1 = 80 + 10*rand;
+    f1 = 70 + 20*rand;
     t = (0:(N - 1))./fs;
 
-    %%{
-    c = (f1 - f0)/4;
+    %{
+    c = (f1 - f0)/(2 + 2*rand);
     f_x = f0 + t.*c;
     h_f = @(i) f0 + c*(i - 1)/fs;
     h_q = @(t) c.*ones(numel(t), 1);
@@ -18,6 +16,14 @@ function test10_chirprate
     %}
 
     %{
+    c = (f1 - f0)/(2 + 2*rand);
+    f_x = f0 + 0.5.*t.^2.*c;
+    h_f = @(i) f0 + 0.5*c*((i - 1)/fs)^2;
+    h_q = @(t) c.*t;
+    x = sin(ph_0 + 2*pi.*(0.5*(1/3)*c.*t.^3 + f0.*t));
+    %}
+    
+    %%{
     c = (f1/f0)^(1/(N/fs));
     f_x = f0.*c.^t;
     h_f = @(i) f0*c^((i - 1)/fs);
@@ -56,12 +62,7 @@ function test10_chirprate
     E = zeros(numel(s), 1);
     for i=1:numel(s)
         [H, xiH, xisqH, dH, xidH] = morsewavelet(gam, be, k, s(i).*f);
-        dH = dH./N;
-        xidH = xidH./N;
         E(i) = trapz(s(i).*f(1:N/2), H(1:N/2).^2);
-        
-        %dH = gradient(H, s(i));
-        %xidH = gradient(xiH, s(i));
 
         W_H = ifft(X.*H).*sqrt(s(i));
         W_xiH = ifft(X.*xiH).*sqrt(s(i));
@@ -114,10 +115,13 @@ function test10_chirprate
     subplot(2, 1, 1);
     plot(t, chat(:, 1).*fs);
     hold on
-    plot(t, chat(:, 2).*fs)
+    plot(t, chat(:, 2).*fs^2, 'Color', "#D95319")
     hold off
     subplot(2, 1, 2);
     plot(t, h_q(t), '-.m');
-    
-    fprintf('%e vs. %e\n', h_q(t(60)), chat(60, 2)/sqrt(fs));
+    yl = ylim();
+    hold on
+    plot(t, chat(:, 2).*fs^2, 'Color', "#D95319")
+    hold off
+    ylim(yl);
 end
