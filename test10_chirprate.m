@@ -1,13 +1,13 @@
 function test10_chirprate
     %% data simulation
-    N = 1600;
+    N = 1300 + 2*randi(250);
     fs = 450;
     ph_0 = rand*2*pi;
     f0 = 5 + 10*rand;
     f1 = 70 + 20*rand;
     t = (0:(N - 1))./fs;
 
-    %{
+    %%{
     c = (f1 - f0)/(2 + 2*rand);
     f_x = f0 + t.*c;
     h_f = @(i) f0 + c*(i - 1)/fs;
@@ -23,7 +23,7 @@ function test10_chirprate
     x = sin(ph_0 + 2*pi.*(0.5*(1/3)*c.*t.^3 + f0.*t));
     %}
     
-    %%{
+    %{
     c = (f1/f0)^(1/(N/fs));
     f_x = f0.*c.^t;
     h_f = @(i) f0*c^((i - 1)/fs);
@@ -54,6 +54,8 @@ function test10_chirprate
     n = (0:numel(x) - 1);%./numel(x);
     Omg = zeros(numel(s), numel(x));
     tau = zeros(numel(s), numel(x));
+    dOmg = zeros(numel(s), numel(x), 2);
+    dtau = zeros(numel(s), numel(x), 2);
     q = zeros(numel(s), numel(x));
     qhat = zeros(numel(s), numel(x), 2);
     fhat = zeros(numel(x), 1);
@@ -72,8 +74,15 @@ function test10_chirprate
 
         Omg(i, :) = (1/s(i)).*W_xiH./W_H;
         tau(i, :) = n + s(i)/(1i*2*pi).*(W_dH./W_H);
-        q(i, :) = (1i*2*pi)/s(i)^2 .* (W_H.*W_xisqH - W_xiH.^2) ./ (W_H.^2 + W_H.*W_xidH - W_dH.*W_xiH);
-        qhat(i, :, 1) = real(gradient(Omg(i, :), 1)./gradient(tau(i, :), 1));
+        
+        dOmg(i, :, 1) = gradient(Omg(i, :), 1);
+        dOmg(i, :, 2) = (1i*2*pi/s(i)) .* (W_H.*W_xisqH - W_xiH.^2)./W_H.^2;
+        
+        dtau(i, :, 1) = gradient(tau(i, :), 1);
+        dtau(i, :, 2) = 1/N + s(i).*(W_H.*W_xidH - W_dH.*W_xiH)./W_H.^2;
+        
+        q(i, :) = real(dOmg(i, :, 2)./dtau(i, :, 2));
+        qhat(i, :, 1) = real(dOmg(i, :, 1)./dtau(i, :, 1));
     end
     q = real(q);
 
@@ -114,16 +123,10 @@ function test10_chirprate
     title(sprintf('error = %e', mean(abs(t(:) - gdhat(:).*(N/fs)))));
 
     figure(5);
-    subplot(2, 1, 1);
-    plot(t, chat(:, 1).*fs^2);
-    hold on
-    plot(t, chat(:, 2).*fs^2, 'Color', "#D95319");
-    plot(t, chat(:, 3).*fs^2, 'Color', "#EDB120", 'LineStyle', '--');
-    hold off
-    subplot(2, 1, 2);
     plot(t, h_q(t), '-.m');
     yl = ylim();
     hold on
+    plot(t, chat(:, 1).*fs^2, 'Color', "#0072BD");
     plot(t, chat(:, 2).*fs^2, 'Color', "#D95319");
     plot(t, chat(:, 3).*fs^2, 'Color', "#EDB120", 'LineStyle', '--');
     hold off
