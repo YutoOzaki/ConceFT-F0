@@ -7,7 +7,7 @@ function test10_chirprate
     f1 = 70 + 20*rand;
     t = (0:(N - 1))./fs;
 
-    %%{
+    %{
     c = (f1 - f0)/(2 + 2*rand);
     f_x = f0 + t.*c;
     h_f = @(i) f0 + c*(i - 1)/fs;
@@ -23,7 +23,7 @@ function test10_chirprate
     x = sin(ph_0 + 2*pi.*(0.5*(1/3)*c.*t.^3 + f0.*t));
     %}
     
-    %{
+    %%{
     c = (f1/f0)^(1/(N/fs));
     f_x = f0.*c.^t;
     h_f = @(i) f0*c^((i - 1)/fs);
@@ -51,7 +51,7 @@ function test10_chirprate
     s = s_min*2.^(0:dj:J)';
 
     X = fft(x);
-    n = (0:numel(x) - 1);%./numel(x);
+    n = 0:(numel(x) - 1);
     Omg = zeros(numel(s), numel(x));
     tau = zeros(numel(s), numel(x));
     dOmg = zeros(numel(s), numel(x), 2);

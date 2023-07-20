@@ -1,6 +1,5 @@
 function test07_sst2
-    rng(1);
-
+    rng(5);
     %%
     fs = 2000;
     t = (0:(2*fs - 1))./fs;
@@ -28,18 +27,17 @@ function test07_sst2
     %}
 
     %%
+    gam = 2 + rand*9;
+    be = 20 + rand*10;
     %K = randi(5) - 1;
     K = 0;
-    be = 20 + rand*10;
-    gam = 2 + rand*9;
     f = linspace(0, 1, numel(x));
-    X = fft(x);
-    [~, ome_c] = morsefreq(be, gam);
     
     r = rand(K + 1, 1);
     r = r./sum(r);
 
     %%
+    [~, ome_c] = morsefreq(be, gam);
     s_min = ome_c/0.5;
     s_max = ome_c/(1/numel(x));
     J = log2(s_max) - log2(s_min);
@@ -47,56 +45,46 @@ function test07_sst2
     s = s_min*2.^(0:dj:J)';
 
     %%
-    W = zeros(numel(s), numel(x));
-    Omg = zeros(numel(s), numel(x));
-    t_N = linspace(0, 1, numel(x));
+    X = fft(x);
+    N = numel(x);
+    W = zeros(numel(s), N);
+    Omg = zeros(numel(s), N);
+    n = 0:(numel(x) - 1);
 
     for i=1:numel(s)
         H = 0;
+        xiH = 0;
+        xisqH = 0;
         dH = 0;
-        ddH = 0;
-        kH = 0;
-        dkH = 0;
-
-        f_s = s(i).*f;
-
-        k = 0;
-        [H_k, dH_k, ddH_k] = morsewavelet(gam, be, k, f_s);
-        H = H + r(k + 1).*H_k;
-        dH = dH + r(k + 1).*dH_k;
-        ddH = ddH + r(k + 1).*ddH_k;
-        [kH_k, dkH_k, ddkH_k] = morsewavelet(gam, be, k + 1, f_s);
-        kH = kH + r(k + 1).*kH_k;
-        dkH = dkH + r(k + 1).*dkH_k;
+        xidH = 0;
         
         for k=0:K
-            H_k = kH_k;
-            dH_k = dkH_k;
-            ddH_k = ddkH_k;
+            [H_k, xiH_k, xisqH_k, dH_k, xidH_k] = morsewavelet(gam, be, k, s(i).*f);
 
             H = H + r(k + 1).*H_k;
+            xiH = xiH + r(k + 1).*xiH_k;
+            xisqH = xisqH + r(k + 1).*xisqH_k;
             dH = dH + r(k + 1).*dH_k;
-            ddH = ddH + r(k + 1).*ddH_k;
-
-            [kH_k, dkH_k, ddkH_k] = morsewavelet(gam, be, k + 1, f_s);
-            kH = kH + r(k + 1).*kH_k;
-            dkH = dkH + r(k + 1).*dkH_k;
+            xidH = xidH + r(k + 1).*xidH_k;
         end
 
-        W(i, :) = ifft(X.*H);
-        dW = ifft(X.*dH);
-        Omg_1 = dW./W(i, :)./s(i);
+        W_H = ifft(X.*H).*sqrt(s(i));
+        W_xiH = ifft(X.*xiH).*sqrt(s(i));
+        W_xisqH = ifft(X.*xisqH).*sqrt(s(i));
+        W_dH = ifft(X.*dH).*sqrt(s(i));
+        W_xidH = ifft(X.*xidH).*sqrt(s(i));
+        
+        W(i, :) = W_H;
+        
+        Omg_1 = (1/s(i)).*W_xiH./W_H;
+        tau = n + s(i)/(1i*2*pi).*(W_dH./W_H);
+        
+        dOmg = (1i*2*pi/s(i)) .* (W_H.*W_xisqH - W_xiH.^2)./W_H.^2;
+        dtau = 1/N + s(i).*(W_H.*W_xidH - W_dH.*W_xiH)./W_H.^2;
+        q = dOmg./(dtau + 0);
 
-        kW = ifft(X.*kH);
-        tau = t_N + s(i)/(2*1i*pi).*(kW./W(i, :));
-
-        ddW = ifft(X.*ddH);
-        dkW = ifft(X.*dkH);
-        q = (2*1i*pi/s(i)^2) .* (ddW.*W(i, :) - dW.^2)./(W(i, :).^2 + dkW.*W(i, :) - kW.*dW);
-
-        Omg(i, :) = Omg_1 + q.*(t_N - tau);
+        Omg(i, :) = Omg_1 + q.*(n - tau);
     end
-    W = W.*sqrt(s);
     
     %% synchrosqueezing
     F = ome_c./s.*fs;
