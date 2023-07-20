@@ -1,5 +1,5 @@
 function test05_sst
-    rng(1);
+    rng(5);
 
     %%
     fs = 2000;

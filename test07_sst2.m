@@ -81,9 +81,10 @@ function test07_sst2
         
         dOmg = (1i*2*pi/s(i)) .* (W_H.*W_xisqH - W_xiH.^2)./W_H.^2;
         dtau = 1/N + s(i).*(W_H.*W_xidH - W_dH.*W_xiH)./W_H.^2;
-        q = dOmg./(dtau + 0);
-
-        Omg(i, :) = Omg_1 + q.*(n - tau);
+        q = dOmg./dtau;
+        Omg_2 = Omg_1 + q.*(n - tau);
+        
+        Omg(i, :) = Omg_2;
     end
     
     %% synchrosqueezing
