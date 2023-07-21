@@ -28,6 +28,7 @@ function [W_x, T, E_Omg] = h_conceFT2(x, be, gam, frange, voice, fs, J, N)
     Z = fft(z);
     H_ini = zeros(1, numel(f));
     k = 0:(J - 1);
+    t = 0:(numel(x) - 1);
 
     %% GPU
     %{
@@ -54,49 +55,38 @@ function [W_x, T, E_Omg] = h_conceFT2(x, be, gam, frange, voice, fs, J, N)
         %% orthonormal wavelets
         for i=1:numel(s)
             H = H_ini;
+            xiH = H_ini;
+            xisqH = H_ini;
             dH = H_ini;
-            ddH = H_ini;
-            kH = H_ini;
-            dkH = H_ini;
+            xidH = H_ini;
 
-            f_s = s(i).*f;
-            
-            j = 1;
-            [H_j, dH_j, ddH_j] = morsewavelet(gam, be, k(j), f_s);
-            H = H + r(n, j).*H_j;
-            dH = dH + r(n, j).*dH_j;
-            ddH = ddH + r(n, j).*ddH_j;
-            [kH_j, dkH_j, ddkH_j] = morsewavelet(gam, be, k(j) + 1, f_s);
-            kH = kH + r(n, j).*kH_j;
-            dkH = dkH + r(n, j).*dkH_j;
-
-            for j=2:J
-                H_j = kH_j;
-                dH_j = dkH_j;
-                ddH_j = ddkH_j;
-
+            for j=1:J
+                [H_j, xiH_j, xisqH_j, dH_j, xidH_j] = morsewavelet(gam, be, k(j), s(i).*f);
+                
                 H = H + r(n, j).*H_j;
+                xiH = xiH + r(n, j).*xiH_j;
+                xisqH = xisqH + r(n, j).*xisqH_j;
                 dH = dH + r(n, j).*dH_j;
-                ddH = ddH + r(n, j).*ddH_j;
-
-                [kH_j, dkH_j, ddkH_j] = morsewavelet(gam, be, k(j) + 1, f_s);
-                kH = kH + r(n, j).*kH_j;
-                dkH = dkH + r(n, j).*dkH_j;
+                xidH = xidH + r(n, j).*xidH_j;
             end
     
-            W(i, :) = ifft(Z.*H);
-            dW = ifft(Z.*dH)./s(i);
+            W_H = ifft(X.*H).*sqrt(s(i));
+            W_xiH = ifft(X.*xiH).*sqrt(s(i));
+            W_xisqH = ifft(X.*xisqH).*sqrt(s(i));
+            W_dH = ifft(X.*dH).*sqrt(s(i));
+            W_xidH = ifft(X.*xidH).*sqrt(s(i));
 
-            Omg_1 = dW./W(i, :)./s(i);
+            W(i, :) = W_H;
+            
+            Omg_1 = (1/s(i)).*W_xiH./W_H;
+            tau = t + s(i)/(1i*2*pi).*(W_dH./W_H);
 
-            kW = ifft(Z.*kH);
-            tau = s(i)/(2*1i*pi).*(kW./W(i, :));
-    
-            ddW = ifft(Z.*ddH);
-            dkW = ifft(Z.*dkH);
-            q = (2*1i*pi/s(i)^2) .* (ddW.*W(i, :) - dW.^2)./(W(i, :).^2 + dkW.*W(i, :) - kW.*dW);
-    
-            Omg(i, :) = Omg_1 + q.*(-tau);
+            dOmg = (1i*2*pi/s(i)) .* (W_H.*W_xisqH - W_xiH.^2)./W_H.^2;
+            dtau = 1/fs + s(i).*(W_H.*W_xidH - W_dH.*W_xiH)./W_H.^2;
+            q = dOmg./dtau;
+            Omg_2 = Omg_1 + q.*(t - tau);
+        
+            Omg(i, :) = Omg_2;
         end
         
         %% IF estimation
@@ -107,7 +97,6 @@ function [W_x, T, E_Omg] = h_conceFT2(x, be, gam, frange, voice, fs, J, N)
     
         %% thresholding
         W_x = W(:, numel(ZEROPAD) + 1:end - numel(ZEROPAD));
-        W_x = W_x.*sqrt(s);
         P = abs(W_x);
         dlt = median(P(:))/0.6245*2;
 

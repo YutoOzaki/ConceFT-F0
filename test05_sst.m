@@ -1,5 +1,5 @@
 function test05_sst
-    rng(5);
+    rng(11);
 
     %%
     fs = 2000;
@@ -12,11 +12,37 @@ function test05_sst
     for i=1:numel(a)
         x = x + a(i).*sin(2*pi*f0(i).*t);
     end
+    f_x = [f0(1).*ones(1, numel(t));...
+        f0(2).*ones(1, numel(t));...
+        f0(3).*ones(1, numel(t));...
+        ];
     %}
     
     %{
-    f0 = fs*0.3*rand + 0.05*fs;
-    x = chirp(t, f0, t(end), fs*0.45, 'quadratic');
+    ph_0 = rand*2*pi;
+    f0 = 20 + 10*rand;
+    f1 = 900 + 70*rand;
+    c = (f1 - f0)/(2 + 2*rand);
+    f_x = f0 + 0.5.*t.^2.*c;
+    x = sin(ph_0 + 2*pi.*(0.5*(1/3)*c.*t.^3 + f0.*t));
+    %}
+    
+    %{
+    ph_0 = rand*2*pi;
+    f0 = 20 + 10*rand;
+    f1 = 900 + 70*rand;
+    c = (f1/f0)^(1/(numel(t)/fs));
+    f_x = f0.*c.^t;
+    x = sin(ph_0 + 2*pi*f0.*(c.^t - 1)./log(c));
+    %}
+    
+    %{
+    f0 = [];
+    A = 1 + 3.*t.^2 + 4.*(1 - t).^7;
+    ph = 240.*t - 2.*exp(-2.*t).*sin(14*pi.*t);
+    x = A.*exp(2*pi.*1i.*ph);
+    x = real(x);
+    f_x = gradient(ph).*fs;
     %}
 
     %%
@@ -80,7 +106,17 @@ function test05_sst
     end
     T(1, :) = T(1, :) + W(1, :);
     T(end, :) = T(end, :) + W(end, :);
-
+    
+    %% Check energy
+    E = 0;
+    for j=1:size(f_x, 1)
+        for i=1:size(T, 2)
+            [~, idx] = min(abs(f_x(j, i) - F));
+            E = E + sum(abs(T(idx - 2:idx + 2, i)).^2);
+        end
+    end
+    E = E./sum(abs(T(:)).^2);
+    
     %% Reconstruction using a delta function as the synthesis wavelet
     if K == 0
         [~, C_dlt] = morseadmissibility(gam, be);
@@ -139,11 +175,12 @@ function test05_sst
     subplot(2, 2, 2);
     p = pcolor(1:size(T, 2), F, abs(T).^2);
     p.EdgeColor = 'none';
+    title(['E = ', num2str(E, '%3.4f')]);
     subplot(2, 2, 3);
-    p = pcolor(1:size(W, 2), F, log(abs(W).^2));
+    p = pcolor(1:size(W, 2), F, (abs(W).^2).^0.1);
     p.EdgeColor = 'none';
     subplot(2, 2, 4);
-    p = pcolor(1:size(T, 2), F, log(abs(T).^2));
+    p = pcolor(1:size(T, 2), F, (abs(T).^2).^0.1);
     p.EdgeColor = 'none';
 
     figure(4);

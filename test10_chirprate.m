@@ -15,7 +15,7 @@ function test10_chirprate
     x = cos(ph_0 + 2*pi.*(c/2.*t.^2 + f0.*t));
     %}
 
-    %{
+    %%{
     c = (f1 - f0)/(2 + 2*rand);
     f_x = f0 + 0.5.*t.^2.*c;
     h_f = @(i) f0 + 0.5*c*((i - 1)/fs)^2;
@@ -23,7 +23,7 @@ function test10_chirprate
     x = sin(ph_0 + 2*pi.*(0.5*(1/3)*c.*t.^3 + f0.*t));
     %}
     
-    %%{
+    %{
     c = (f1/f0)^(1/(N/fs));
     f_x = f0.*c.^t;
     h_f = @(i) f0*c^((i - 1)/fs);
@@ -79,7 +79,7 @@ function test10_chirprate
         dOmg(i, :, 2) = (1i*2*pi/s(i)) .* (W_H.*W_xisqH - W_xiH.^2)./W_H.^2;
         
         dtau(i, :, 1) = gradient(tau(i, :), 1);
-        dtau(i, :, 2) = 1/N + s(i).*(W_H.*W_xidH - W_dH.*W_xiH)./W_H.^2;
+        dtau(i, :, 2) = 1/fs + s(i).*(W_H.*W_xidH - W_dH.*W_xiH)./W_H.^2;
         
         q(i, :) = real(dOmg(i, :, 2)./dtau(i, :, 2));
         qhat(i, :, 1) = real(dOmg(i, :, 1)./dtau(i, :, 1));
