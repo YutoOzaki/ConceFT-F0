@@ -23,6 +23,10 @@ if size(s, 2) == 2
 end
 
 %%
+s = h_denoising(s, fs);
+fprintf('%s: denoising completed\n', datetime);
+
+%%
 s = h_downsampling(s, fs_orig, fs);
 
 %%
@@ -45,13 +49,13 @@ offset = ceil(L_integer/2);
 
 oct = log2(frange(end)/frange(1));
 F = frange(1).*2.^((0:(oct*voice))'./voice);
-q = 8;
+q = 10;
 
-for k=76:size(segment, 1)
+for k=61:size(segment, 1)
     % ConceFT
     z = s(segment(k, 1) - offset:segment(k, 2) + offset);
-    %[W, T, E_Omg] = h_conceFT(z', be, gam, frange, voice, fs, J, N);
-    [W, T, E_Omg] = h_conceFT2(z', be, gam, frange, voice, fs, J, N);
+    [W, T, E_Omg] = h_conceFT(z', be, gam, frange, voice, fs, J, N);
+    %[W, T, E_Omg] = h_conceFT2(z', be, gam, frange, voice, fs, J, N);
     W = W(:, 1 + offset:end - offset);
     T = T(:, 1 + offset:end - offset);
     E_Omg = E_Omg(:, 1 + offset:end - offset);
@@ -71,7 +75,7 @@ for k=76:size(segment, 1)
     end
 
     % plot
-    fobj = figure;
+    fobj = figure(1);
     clf; cla;
     fobj.Position = [40, 580, 1600, 400];
 

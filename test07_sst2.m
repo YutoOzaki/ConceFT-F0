@@ -1,10 +1,9 @@
 function test07_sst2
-    rng(11);
     %%
     fs = 2000;
     t = (0:(2*fs - 1))./fs;
     
-    %%{
+    %{
     a = rand(3, 1);
     f0 = sort((fs*0.3).*rand(3, 1));
     x = 0;
@@ -17,7 +16,7 @@ function test07_sst2
         ];
     %}
     
-    %{
+    %%{
     ph_0 = rand*2*pi;
     f0 = 20 + 10*rand;
     f1 = 900 + 70*rand;

@@ -25,7 +25,7 @@ function [W_x, T, E_Omg] = h_conceFT2(x, be, gam, frange, voice, fs, J, N)
     W = zeros(numel(s), numel(z));
     Omg = zeros(numel(s), numel(z));
     T = zeros(numel(s), numel(x));
-    Z = fft(z);
+    X = fft(z);
     H_ini = zeros(1, numel(f));
     k = 0:(J - 1);
     t = 0:(numel(x) - 1);
@@ -125,7 +125,7 @@ function [W_x, T, E_Omg] = h_conceFT2(x, be, gam, frange, voice, fs, J, N)
     k = 0;
     for i=1:numel(s)
         H = morsewavelet(gam, be, k, s(i).*f);
-        W(i, :) = ifft(Z.*H);
+        W(i, :) = ifft(X.*H);
     end
 
     W_x = W(:, numel(ZEROPAD) + 1:end - numel(ZEROPAD));
