@@ -38,12 +38,12 @@ y = gather(ewtbandpass(s, f_lb, f_ub, fs, gpumode));
 segment = h_voicingknn(y, round(fs*0.01), round(fs*0.02));
 
 %%
-be = 30;
+be = 12;
 gam = 9;
 frange = [25, 3200];
-voice = 120;
-J = 3;
-N = 20;
+voice = 32;
+J = 2;
+N = 64;
 L_integer = round(h_lengthcheck(be, gam, frange(1), fs)*1.1);
 offset = ceil(L_integer/2);
 
@@ -51,11 +51,11 @@ oct = log2(frange(end)/frange(1));
 F = frange(1).*2.^((0:(oct*voice))'./voice);
 q = 10;
 
-for k=61:size(segment, 1)
+for k=1:size(segment, 1)
     % ConceFT
     z = s(segment(k, 1) - offset:segment(k, 2) + offset);
-    [W, T, E_Omg] = h_conceFT(z', be, gam, frange, voice, fs, J, N);
-    %[W, T, E_Omg] = h_conceFT2(z', be, gam, frange, voice, fs, J, N);
+    %[W, T, E_Omg] = h_conceFT(z', be, gam, frange, voice, fs, J, N);
+    [W, T, E_Omg] = h_conceFT2(z', be, gam, frange, voice, fs, J, N);
     W = W(:, 1 + offset:end - offset);
     T = T(:, 1 + offset:end - offset);
     E_Omg = E_Omg(:, 1 + offset:end - offset);
@@ -75,7 +75,7 @@ for k=61:size(segment, 1)
     end
 
     % plot
-    fobj = figure(1);
+    fobj = figure;
     clf; cla;
     fobj.Position = [40, 580, 1600, 400];
 

@@ -5,8 +5,8 @@ function y = h_denoising(s, fs)
 
     L = round(fs*0.01);
     J = 4096;
-    q_u = 0.2;
-    q_l = 0.1;
+    q_u = 0.05;
+    q_n = 0.99;
     
     %%
     E = zeros(numel(s), 1);
@@ -16,17 +16,20 @@ function y = h_denoising(s, fs)
         E(i) = mean(s(idx_st:idx_ed).^2);
     end
     
-    idx = find(E < quantile(E, q_u) & E > quantile(E, q_l));
+    idx = find(E < quantile(E, q_u));
     idx = idx(idx > N/2);
     idx = idx(idx < (numel(s) - N/2));
     
-    A_d = zeros(N, 1);
+    A_j = zeros(N, J);
     for j=1:J
         i = idx(randi(numel(idx)));
         x = s(i - N/2:i + N/2 - 1);
-        A_d = A_d + abs(fft(window.*x));
+        A_j(:, j) = abs(fft(window.*x));
     end
-    A_d = A_d./J;
+    A_d = zeros(N, 1);
+    for j=1:numel(A_d)
+        A_d(j) = quantile(A_j(j, :), q_n);
+    end
     
     %%
     noverlap = N*1/2;
